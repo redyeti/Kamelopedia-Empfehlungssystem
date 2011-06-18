@@ -1,6 +1,6 @@
 <?php
 
-define('STD_METRIC', 'maxbased');
+define('STD_METRIC', 'minbased');
 
 class EmpfQueryCreator {
 	private $metric_name;
@@ -15,17 +15,16 @@ class EmpfQueryCreator {
 			case "minbased":
 				return Array(
 					"SELECT" => "
-					COUNT(page.page_id) /* gemeinsame Empfehlungen */ /
-					(SELECT /* mögliche Empfehlungen */
-						COUNT(*) AS num_entries 
-						FROM " . $this->dbr->tableName( 'pagelinks' ) . " AS total
-						WHERE total.pl_from = pagesrc.page_id
-						OR total.pl_from = my_empf.page_id
-						GROUP BY total.pl_from
-						ORDER BY num_entries ASC
-						LIMIT 1)",
+					COUNT(page.page_id) * COUNT(page.page_id) /* gemeinsame Empfehlungen */ /
+					metric.num_entries",
 
-					"JOIN" => "",
+					"JOIN" => "JOIN (SELECT /* mögliche Empfehlungen */
+                                                COUNT(*) AS num_entries,
+						total.pl_from AS page_id
+                                                FROM " . $this->dbr->tableName( 'pagelinks' ) . " AS total
+                                                GROUP BY total.pl_from
+                                                ORDER BY num_entries ASC
+                                                ) AS metric ON metric.page_id = my_empf.page_id OR metric.page_id = pagesrc.page_id",
 					"WHERE" => "",
 				);
 				break;
@@ -54,7 +53,7 @@ class EmpfQueryCreator {
 		$metric_part = $this->createMetricPart($metric_name);
 		
 		return "SELECT
-				" . $metric_part["SELECT"] . " AS rate,
+				" . $metric_part["SELECT"] . " + RAND() AS rate,
 				pagesrc.page_title as page_title,
 				pagesrc.page_id as page_id
 
@@ -90,7 +89,7 @@ class EmpfQueryCreator {
 				FROM " . $this->dbr->tableName( 'pagelinks' ) . " AS pls
 				JOIN " . $this->dbr->tableName( 'page' ) . " AS ps ON ps.page_id = pls.pl_from
 				WHERE ps.page_namespace = 2 AND ps.page_title = \"" . mysql_real_escape_string($camel) ."/Empfehlung\")
-			ORDER BY SUM(sc.rate) DESC";
+			ORDER BY rate DESC";
 	}
 
 }
