@@ -2,6 +2,9 @@
 
 define('STD_METRIC', 'minbased');
 
+#define('SQL_RAND', ' + RAND() ');
+define('SQL_RAND', '');
+
 class EmpfQueryCreator {
 	private $metric_name;
 	private $dbr;
@@ -18,7 +21,7 @@ class EmpfQueryCreator {
 					COUNT(page.page_id) * COUNT(page.page_id) /* gemeinsame Empfehlungen */ /
 					metric.num_entries",
 
-					"JOIN" => "JOIN (SELECT /* mögliche Empfehlungen */
+					"JOIN" => "JOIN (SELECT STRAIGHT_JOIN /* mögliche Empfehlungen */
                                                 COUNT(*) AS num_entries,
 						total.pl_from AS page_id
                                                 FROM " . $this->dbr->tableName( 'pagelinks' ) . " AS total
@@ -33,7 +36,7 @@ class EmpfQueryCreator {
 				return Array(
 					"SELECT" => "
 					COUNT(page.page_id) /* gemeinsame Empfehlungen */ /
-					(SELECT /* mögliche Empfehlungen */
+					(SELECT STRAIGHT_JOIN /* mögliche Empfehlungen */
 						COUNT(*) AS num_entries 
 						FROM " . $this->dbr->tableName( 'pagelinks' ) . " AS total
 						WHERE total.pl_from = pagesrc.page_id
@@ -41,7 +44,7 @@ class EmpfQueryCreator {
 						GROUP BY total.pl_from
 						ORDER BY num_entries DESC
 						LIMIT 1)",
-					"JOIN" => "",
+					"JOIN" => "", /* FIXME */
 					"WHERE" => "",
 				);
 				break;
@@ -52,8 +55,8 @@ class EmpfQueryCreator {
 	function createSimilarCamelsQuery($camel, $metric_name) {
 		$metric_part = $this->createMetricPart($metric_name);
 		
-		return "SELECT
-				" . $metric_part["SELECT"] . " + RAND() AS rate,
+		return "SELECT STRAIGHT_JOIN
+				" . $metric_part["SELECT"] . SQL_RAND ." AS rate,
 				pagesrc.page_title as page_title,
 				pagesrc.page_id as page_id
 
@@ -75,15 +78,15 @@ class EmpfQueryCreator {
 	}
 
 	function createRecommendationsQuery($camel, $metric_name) {
-		return "SELECT
+		return "SELECT STRAIGHT_JOIN
 				p.page_title AS page_title,
 				p.page_namespace AS page_namespace,
 				p.page_id AS page_id,
 				SUM(sc.rate) AS rate
-			FROM " . $this->dbr->tableName( 'page' ) . " AS p
+			FROM " . $this->dbr->tableName( 'page' ) . " AS p FORCE INDEX(PRIMARY,name_title)
 			JOIN " . $this->dbr->tableName( 'pagelinks' ) . " AS plfr ON p.page_namespace = plfr.pl_namespace AND p.page_title = plfr.pl_title
 			JOIN (" . $this->createSimilarCamelsQuery($camel, $metric_name) . ") AS sc ON sc.page_id = plfr.pl_from
-			GROUP BY p.page_title
+			GROUP BY p.page_id
 			HAVING (page_namespace, page_title) NOT IN (
 				SELECT pls.pl_namespace AS page_namespace, pls.pl_title AS page_title
 				FROM " . $this->dbr->tableName( 'pagelinks' ) . " AS pls
@@ -112,17 +115,16 @@ class SpecialEmpf extends SpecialPage {
 		#TODO: falls $par leer ist, Auswahlfeld anzeigen und beenden
 
 		$dbr = wfGetDB( DB_SLAVE );
-		#$dbr->query("SELECT * FROM " . $dbr->tableName( 'page' ));
-
-		$wgOut->addWikiText("==Kamele mit ähnlichen Empfehlungen==");
-
 		$c = new EmpfQueryCreator($dbr);
+
+		/*
+		$wgOut->addWikiText("==Kamele mit ähnlichen Empfehlungen==");
 
 		$res = $dbr->query( $c->createSimilarCamelsQuery($par, STD_METRIC) . " LIMIT 10");
 
 		foreach( $res as $row ) {
         		$wgOut->addWikiText("\n* " . $row->page_title . ": " . $row->rate);
-		}
+		}*/
 
 		$wgOut->addWikiText("==Lesetipps==");
 		
