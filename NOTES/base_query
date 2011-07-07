@@ -1,0 +1,17 @@
+SELECT count(*) AS counter, p3.page_title
+FROM tw_page AS p0
+JOIN tw_pagelinks AS l1 ON p0.page_id = l1.pl_from
+JOIN tw_pagelinks AS l2 ON l1.pl_title = l2.pl_title AND l1.pl_namespace = l2.pl_namespace
+JOIN tw_page AS p3 ON l2.pl_from = p3.page_id
+WHERE p0.page_namespace = 2 AND p0.page_title = "J*/Empfehlung" /* meine Seite */
+AND p0.page_id != p3.page_id
+AND p3.page_namespace = 2 AND p3.page_title LIKE "%/Empfehlung"
+GROUP BY p3.page_title
+ORDER BY counter DESC
+
+/*
+p0: eigene Empfehlungsseite
+ v (l1)
+ ^ (l2)
+p3: andere Empfehlungsseite
+*/
