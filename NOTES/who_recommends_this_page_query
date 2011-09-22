@@ -1,0 +1,5 @@
+SELECT p2.page_title
+FROM tw_pagelinks as l1
+JOIN tw_page AS p2 ON l1.pl_from = p2.page_id
+WHERE l1.pl_namespace = 0 AND l1.pl_title = "Nürnberg" /* Beispiel */
+AND p2.page_namespace = 2 AND p2.page_title LIKE "%/Empfehlung"

@@ -1,0 +1,5 @@
+SELECT distinct p1.pl_title, SUM(sim.metric)*100 as metric, SUM(sim.metric)*100*RAND() as randmetric
+FROM twe_simcamel AS sim
+JOIN tw_pagelinks AS p1 ON sim.page_id = p1.pl_from
+GROUP BY p1.pl_title
+ORDER BY randmetric DESC

@@ -1,0 +1,26 @@
+SELECT
+  count(distinct p2.page_id) AS counter,
+  count(distinct p4.page_id) AS total,
+  count(distinct p2.page_id) / count(distinct p4.page_id) AS metric,
+  p3.page_title
+FROM tw_page AS p0
+JOIN tw_pagelinks AS l1 ON p0.page_id = l1.pl_from
+JOIN tw_page AS p2 ON l1.pl_title = p2.page_title AND l1.pl_namespace = p2.page_namespace
+JOIN tw_pagelinks AS l2 ON l1.pl_title = l2.pl_title AND l1.pl_namespace = l2.pl_namespace
+JOIN tw_page AS p3 ON l2.pl_from = p3.page_id
+JOIN tw_pagelinks AS l4 ON p3.page_id = l4.pl_from
+JOIN tw_page AS p4 ON p4.page_title = l4.pl_title AND p4.page_namespace = l4.pl_namespace
+WHERE p0.page_namespace = 2 AND p0.page_title = "J*/Empfehlung" /* meine Seite */
+AND p0.page_id != p3.page_id
+AND p3.page_namespace = 2 AND p3.page_title LIKE "%/Empfehlung"
+GROUP BY p3.page_title
+HAVING counter > 1
+ORDER BY metric DESC
+/*
+p0: eigene Empfehlungsseite
+ v (l1)
+p2: gemeinsam empfohlene Seite
+ ^ (l2)
+p3: andere Empfehlungsseite
+ v (l4)
+*/

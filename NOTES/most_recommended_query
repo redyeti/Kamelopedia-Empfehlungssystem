@@ -1,0 +1,13 @@
+SELECT p2.page_title AS title, count(*) as counter
+FROM tw_page AS p0
+JOIN tw_pagelinks AS l1 ON p0.page_id = l1.pl_from
+JOIN tw_page AS p2 ON l1.pl_namespace = p2.page_namespace AND l1.pl_title = p2.page_title
+WHERE p0.page_namespace = 2 AND p0.page_title LIKE "%/Empfehlung"
+GROUP BY p2.page_id
+ORDER BY counter DESC
+
+/*
+p0 (irgendeine Kamelempfehlung)
+v (Link)
+p2 (Seite)
+*/
