@@ -19,7 +19,7 @@ $wgExtensionCredits['specialpage'][] = array(
         'version' => '1.0beta',
 );
  
-$dir = dirname(__FILE__) . '/';
+$dir = dirname(__FILE__) . DIRECTORY_SEPARATOR;
  
 $wgAutoloadClasses['SpecialKPES'] = $dir . 'SpecialKPES.php'; # Location of the SpecialMyExtension class (Tell MediaWiki to load this file)
 $wgExtensionMessagesFiles['KPES'] = $dir . 'KPES.i18n.php'; # Location of a messages file (Tell MediaWiki to load this file)
