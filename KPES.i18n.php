@@ -1,12 +1,12 @@
 <?php
 $aliases = array();
 $messages = array();
- 
-$aliases['en'] = array(
-        'MyExtension' => array( 'MyExtension', 'AnotherName' ),
+
+$aliases['de'] = array(
+        'KPES' => array( 'Kamelopedia Empfehlungssystem', 'KPES' ),
 );
  
-$messages['en'] = array(
-        'myextension' => 'My Extension',
+$messages['de'] = array(
+        'kpes' => 'Kamelopedia Empfehlungssystem',
 );
 ?>
